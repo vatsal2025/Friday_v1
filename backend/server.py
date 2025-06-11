@@ -296,10 +296,10 @@ class AITradingEngine:
         return features[-1:] if len(features) > 0 else np.array([])
 
     async def generate_ai_analysis(self, symbol: str, signal: str, confidence: float, market_data: Dict) -> str:
-        """Generate AI-powered analysis using OpenAI"""
+        """Generate AI-powered analysis using OpenAI or intelligent fallback"""
         try:
             if not openai_api_key:
-                return f"Technical analysis suggests {signal} signal for {symbol} with {confidence:.2%} confidence."
+                return self.generate_intelligent_analysis(symbol, signal, confidence, market_data)
             
             chat = LlmChat(
                 api_key=openai_api_key,
@@ -333,8 +333,90 @@ class AITradingEngine:
             return response
             
         except Exception as e:
-            logger.error(f"Error generating AI analysis: {e}")
-            return f"Technical analysis indicates {signal} signal for {symbol}. Consider market conditions and risk management."
+            logger.warning(f"OpenAI analysis failed for {symbol}: {e}")
+            return self.generate_intelligent_analysis(symbol, signal, confidence, market_data)
+
+    def generate_intelligent_analysis(self, symbol: str, signal: str, confidence: float, market_data: Dict) -> str:
+        """Generate intelligent analysis without external APIs"""
+        try:
+            current_price = market_data.get('current_price', 0)
+            rsi = market_data.get('rsi', 50)
+            macd = market_data.get('macd', 0)
+            volume = market_data.get('volume', 0)
+            sector = self.sector_mapping.get(symbol, "Unknown")
+            
+            analysis_parts = []
+            
+            # Signal-specific analysis
+            if signal == "BUY":
+                analysis_parts.append(f"🔵 Strong BUY signal identified for {symbol}")
+                if rsi < 40:
+                    analysis_parts.append("RSI shows oversold conditions, indicating potential reversal opportunity")
+                elif rsi < 60:
+                    analysis_parts.append("RSI in healthy range, supporting upward momentum")
+                
+                if macd > 0:
+                    analysis_parts.append("MACD positive crossover confirms bullish momentum")
+                else:
+                    analysis_parts.append("MACD showing early signs of bullish reversal")
+                    
+                analysis_parts.append(f"F&O Strategy: Consider buying ATM call options or futures with strict stop-loss at ₹{current_price * 0.98:.2f}")
+                
+            elif signal == "SELL":
+                analysis_parts.append(f"🔴 Strong SELL signal detected for {symbol}")
+                if rsi > 60:
+                    analysis_parts.append("RSI indicates overbought territory, suggesting downward correction likely")
+                elif rsi > 40:
+                    analysis_parts.append("RSI showing weakening momentum, supporting bearish outlook")
+                
+                if macd < 0:
+                    analysis_parts.append("MACD negative divergence confirms selling pressure")
+                else:
+                    analysis_parts.append("MACD turning bearish, early entry advantage")
+                    
+                analysis_parts.append(f"F&O Strategy: Consider put options or short futures with protective stop at ₹{current_price * 1.02:.2f}")
+                
+            else:  # HOLD
+                analysis_parts.append(f"⚪ HOLD recommendation for {symbol} - Market in consolidation")
+                analysis_parts.append("Mixed technical signals suggest waiting for clearer directional bias")
+                analysis_parts.append("F&O Strategy: Avoid new positions, consider straddle/strangle for volatility plays")
+            
+            # Sector-specific insights
+            sector_insights = {
+                "Banking": "Monitor RBI policy updates and credit growth metrics. Banking stocks sensitive to interest rate changes.",
+                "IT": "Track USD-INR movement and global tech spending. Export-dependent sector with currency hedging considerations.",
+                "Pharma": "Watch for regulatory approvals and US FDA updates. Defensive sector with steady demand.",
+                "Manufacturing": "Capital goods cycle and infrastructure spending key drivers. Cyclical sector responding to economic growth.",
+                "FMCG": "Rural demand recovery and input cost pressures critical factors. Defensive with steady margins.",
+                "Consumer Services": "Discretionary spending and urban consumption patterns influence performance.",
+                "Chemicals": "Raw material costs and global demand cycles drive margins. Export-oriented sector."
+            }
+            
+            if sector in sector_insights:
+                analysis_parts.append(f"Sector Outlook: {sector_insights[sector]}")
+            
+            # Confidence-based recommendations
+            if confidence > 0.7:
+                analysis_parts.append("💪 High confidence signal - Strong technical alignment suggests reliable entry point")
+            elif confidence > 0.5:
+                analysis_parts.append("⚖️ Moderate confidence - Consider position sizing accordingly and monitor closely")
+            else:
+                analysis_parts.append("⚠️ Low confidence - Use as secondary confirmation, avoid large positions")
+            
+            # Volume analysis
+            if volume > 1000000:
+                analysis_parts.append("High volume supports the price movement, indicating institutional participation")
+            else:
+                analysis_parts.append("Moderate volume - watch for increased participation to confirm trend")
+            
+            # Risk management
+            analysis_parts.append(f"Risk Management: Position size should not exceed 2-3% of portfolio. Use trailing stops for profit protection.")
+            
+            return ". ".join(analysis_parts) + "."
+            
+        except Exception as e:
+            logger.error(f"Error generating intelligent analysis: {e}")
+            return f"Technical analysis suggests {signal} signal for {symbol} with {confidence:.1%} confidence. Monitor price action and manage risk appropriately."
 
     async def generate_signal(self, symbol: str) -> TradingSignal:
         """Generate trading signal for a symbol"""
