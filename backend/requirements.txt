@@ -29,3 +29,16 @@ yfinance==0.2.46
 ta==0.11.0
 joblib==1.4.2
 emergentintegrations
+kiteconnect
+redis==5.1.1
+aioredis==2.0.1
+python-jose[cryptography]
+websockets==12.0
+fastapi-limiter==0.1.6
+APScheduler==3.10.4
+scipy==1.12.0
+lightgbm==4.3.0
+catboost==1.2.2
+plotly==5.18.0
+sqlalchemy==2.0.25
+alembic==1.13.1
