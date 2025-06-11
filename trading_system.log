@@ -1,0 +1,1 @@
+2025-06-11 19:17:42,695 - backend.server - ERROR - Startup error: Error Multiple exceptions: [Errno 111] Connect call failed ('127.0.0.1', 6379), [Errno 99] Cannot assign requested address connecting to localhost:6379.
