@@ -206,13 +206,14 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Core AI Trading Engine Implementation"
-    - "OpenAI Integration for AI Analysis"
     - "F&O Symbols Data Pipeline"
-  stuck_tasks: []
+  stuck_tasks:
+    - "F&O Symbols Data Pipeline"
   test_all: false
   test_priority: "high_first"
 
 agent_communication:
   - agent: "main"
     message: "Built comprehensive Friday AI Trading System MVP with 30 F&O symbols, ML-based signal generation, OpenAI integration for intelligent analysis, beautiful dashboard UI, and learning system. Ready for backend testing to verify signal generation and API functionality."
+  - agent: "testing"
+    message: "Completed backend testing. Most APIs are working correctly, but there's an issue with the F&O Symbols Data Pipeline. The yfinance library is unable to fetch market data for Indian stocks, resulting in fallback to default signals. This affects the signal generation and OpenAI analysis. The OpenAI integration is correctly implemented but can't provide meaningful analysis without market data. The portfolio metrics and learning insights APIs are working correctly. Recommend investigating alternative data sources for Indian stocks or fixing the yfinance integration."
